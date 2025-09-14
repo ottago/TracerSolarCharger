@@ -5,12 +5,12 @@ charge controller via Modbus RTU protocol.
 
 ## Hardware Details
 
-Model: Tracer3210AN
-Voltage 12/24v / Li
-Current 30A
-Max PV Voltage 100v
-Max PV Input Power 390w@12v / 780w@24v
-HUIZHOU EPERVER TECHNOLOGY CO LTD
+| Model: Tracer3210AN |
+| Voltage 12/24v / Li |
+| Current 30A |
+| Max PV Voltage 100v |
+| Max PV Input Power 390w@12v / 780w@24v |
+| HUIZHOU EPERVER TECHNOLOGY CO LTD |
 
 ## Features
 
