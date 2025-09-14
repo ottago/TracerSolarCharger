@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tracer Solar Charger Setup",
+        "description": "Configure your Tracer3210AN solar charge controller connection",
+        "data": {
+          "device": "Serial Device Path",
+          "slave_id": "Modbus Slave ID",
+          "baudrate": "Baud Rate"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the solar charger. Please check the device path and connection.",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tracer Solar Charger Options",
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "domain": "tracer_solar_charger",
+  "name": "Tracer Solar Charger",
+  "codeowners": ["@your-github-username"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/your-username/tracer-solar-charger",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/your-username/tracer-solar-charger/issues",
+  "requirements": ["pyserial>=3.5"],
+  "version": "1.0.0"
+}
