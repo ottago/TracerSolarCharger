@@ -5,12 +5,12 @@ charge controller via Modbus RTU protocol.
 
 ## Hardware Details
 
-| Model: Tracer3210AN |
-| Voltage 12/24v / Li |
-| Current 30A |
-| Max PV Voltage 100v |
-| Max PV Input Power 390w@12v / 780w@24v |
-| HUIZHOU EPERVER TECHNOLOGY CO LTD |
+    Model: Tracer3210AN
+    Voltage 12/24v / Li
+    Current 30A
+    Max PV Voltage 100v
+    Max PV Input Power 390w@12v / 780w@24v
+    HUIZHOU EPERVER TECHNOLOGY CO LTD
 
 ## Features
 
@@ -232,6 +232,7 @@ Apply battery type with recommended settings:
 
 Source: https://manuals.plus/epever/tcp-rj45-a-tcp-serial-device-server-manual
 | Pin | Definition | Break out cable |
+|-----|------------|-----------------|
 | 1 | +5v | Green Stripe |
 | 2 | +5v | Green |
 | 3 | RS485-B | Orange Stripe |
@@ -244,6 +245,7 @@ Source: https://manuals.plus/epever/tcp-rj45-a-tcp-serial-device-server-manual
 ### Ethernet cable at charger end - This is T-568A standard
 
 | Pin | Colour |
+|-----|--------|
 | 1 | Green Stripe |
 | 2 | Green |
 | 3 | Orange Stripe |
