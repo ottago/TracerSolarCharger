@@ -15,11 +15,8 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-# Import from our shared library
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from tracer_solar_charger import ModbusRTUClient, PARAMETERS
+# Import from copied shared library
+from .tracer_solar_charger import ModbusRTUClient, PARAMETERS
 
 from .const import (
     DOMAIN,

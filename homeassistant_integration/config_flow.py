@@ -9,11 +9,8 @@ from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-# Import from our shared library
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from tracer_solar_charger import ModbusRTUClient
+# Import from copied shared library
+from .tracer_solar_charger import ModbusRTUClient
 
 from .const import DOMAIN, CONF_SLAVE_ID, CONF_BAUDRATE
 
