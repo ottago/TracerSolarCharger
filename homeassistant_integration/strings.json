@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tracer Solar Charger Setup",
+        "description": "Configure your Tracer3210AN solar charge controller",
+        "data": {
+          "port": "Serial Port",
+          "slave_id": "Modbus Slave ID",
+          "baudrate": "Baud Rate"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to device. Check port and wiring.",
+      "unknown": "Unexpected error occurred"
+    }
+  }
+}
