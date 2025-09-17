@@ -1,9 +1,19 @@
 # Solar Charger Interface for Tracer3210AN
 
-A command-line interface and Home Assistant Plugin for monitoring and managing the Tracer3210AN solar
-charge controller via Modbus RTU protocol.
+A unified library and command-line interface for monitoring and managing the Tracer3210AN solar charge controller via Modbus RTU protocol, with Home Assistant integration.
 
-## Hardware Details
+## Features
+
+- **Shared Core Library**: Common codebase for CLI and Home Assistant integration
+- **Complete Parameter Access**: Read all 131 available parameters (79 unique parameters across 6 categories)
+- **Configuration Writing**: Write 19 configuration parameters with validation and safety checks
+- **Real-time Monitoring**: Continuous monitoring with configurable intervals
+- **Multiple Output Formats**: Human-readable, JSON, and CSV output
+- **Home Assistant Integration**: Complete custom component with 27+ sensors
+- **Simplified Structure**: Flat folder structure with shared modules
+
+## iSupported Hardware
+This software has only been testes with the following hardware.  It may work for others.
 
     Model: Tracer3210AN
     Voltage 12/24v / Li
@@ -12,126 +22,26 @@ charge controller via Modbus RTU protocol.
     Max PV Input Power 390w@12v / 780w@24v
     HUIZHOU EPERVER TECHNOLOGY CO LTD
 
-## Features
 
-- **Complete Parameter Access**: Read all 131 available parameters (79 unique parameters across 6 categories)
-- **Configuration Writing**: Write 19 configuration parameters with validation and safety checks
-- **Real-time Monitoring**: Continuous monitoring with configurable intervals
-- **Multiple Output Formats**: Human-readable, JSON, and CSV output
-- **Efficient Communication**: Multi-register reads for optimal performance
-- **Parameter Categories**: PV, Battery, Load, System, Statistics, and Configuration
-- **Device Discovery**: Automatic device detection and connection testing
-- **Safety Features**: Parameter validation, dry-run mode, and confirmation prompts
-- **Backup/Restore**: Configuration backup and restore functionality
-- **Home Assistant Integration**: Complete Home Assistant custom component with 27+ sensors
+## Project Structure
 
-## Hardware Requirements
-
-- Tracer3210AN Solar Charge Controller
-- USB-to-RS485 converter (or direct serial connection)
-- RJ45 cable connected according to the pinout specification
-
-## Installation
-
-1. **Clone or download the project**
-2. **Create virtual environment**:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. **Make the CLI executable**:
-   ```bash
-   chmod +x solar-charger
-   ```
-
-## Usage
-
-### Basic Commands
-
-#### Device Discovery
-Test connection and verify device communication:
-```bash
-./solar-charger --device /dev/ttyUSB0 discover
 ```
-
-#### List Available Parameters
-View all 79 available parameters organized by category:
-```bash
-./solar-charger list-parameters
-./solar-charger list-parameters --category pv --detailed
-```
-
-#### Read All Parameters
-Get complete device status:
-```bash
-./solar-charger --device /dev/ttyUSB0 read-all
-./solar-charger --device /dev/ttyUSB0 read-all --efficient
-./solar-charger --device /dev/ttyUSB0 read-all --category battery
-```
-
-#### Read Specific Parameters
-Read individual parameters by name:
-```bash
-./solar-charger --device /dev/ttyUSB0 read battery_voltage load_current pv_voltage
-./solar-charger --device /dev/ttyUSB0 read 0x3104 0x3109  # By address
-```
-
-#### Real-time Monitoring
-Continuous monitoring with live updates:
-```bash
-./solar-charger --device /dev/ttyUSB0 monitor --interval 5
-./solar-charger --device /dev/ttyUSB0 monitor --category battery --interval 2
-./solar-charger --device /dev/ttyUSB0 monitor --count 10  # Limited readings
-```
-
-### Output Formats
-
-#### Human-readable (default)
-```bash
-./solar-charger --device /dev/ttyUSB0 read-all
-```
-
-#### JSON Output
-```bash
-./solar-charger --device /dev/ttyUSB0 --format json read-all
-./solar-charger --device /dev/ttyUSB0 --format json read battery_voltage
-```
-
-#### CSV Output
-```bash
-./solar-charger --device /dev/ttyUSB0 --format csv read-all --output data.csv
-```
-
-#### Export Data
-```bash
-./solar-charger --device /dev/ttyUSB0 export --include-config
-```
-
-### Configuration Management
-
-#### List Writable Parameters
-View all parameters that can be modified:
-```bash
-./solar-charger list-writable
-./solar-charger list-writable --detailed --category voltage_protection
-```
-
-#### Write Single Parameter
-Modify individual configuration parameters:
-```bash
-./solar-charger --device /dev/ttyUSB0 write battery_capacity 200
-./solar-charger --device /dev/ttyUSB0 write float_voltage 13.8
-./solar-charger --device /dev/ttyUSB0 write battery_type LiFePO4
-```
-
-#### Dry Run Mode
-Test parameter changes without writing:
-```bash
-./solar-charger --device /dev/ttyUSB0 write float_voltage 13.8 --dry-run
+TracerSolarCharger/
+├── tracer_solar_charger/          # Shared core library
+│   ├── __init__.py
+│   ├── modbus_client.py           # Modbus RTU communication
+│   ├── device_data.py             # Data models and formatting
+│   └── parameter_definitions.py   # Complete parameter mapping
+├── cli.py                         # Command-line interface
+├── solar-charger                  # CLI launcher script
+├── homeassistant_integration/     # Home Assistant custom component
+│   ├── __init__.py
+│   ├── sensor.py
+│   ├── config_flow.py
+│   ├── const.py
+│   ├── manifest.json
+│   └── strings.json
+├── install_homeassistant.sh       # HA integration installer
 ```
 
 #### Backup and Restore Configuration
@@ -193,6 +103,7 @@ Apply battery type with recommended settings:
 - `float_voltage` - Float Voltage (V)
 - `low_voltage_disconnect` - Low Voltage Disconnect (V)
 - And more...
+
 
 ## Writable Parameters (19 total)
 
@@ -258,44 +169,119 @@ Source: https://manuals.plus/epever/tcp-rj45-a-tcp-serial-device-server-manual
 
 
 
+## Installation
 
+### CLI Installation
 
-## Home Assistant Integration
+1. **Clone or download the project**
+2. **Create virtual environment**:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Make the CLI executable**:
+   ```bash
+   chmod +x solar-charger
+   ```
 
-A complete Home Assistant custom component is included for seamless smart home integration.
+### Home Assistant Installation
 
-### Features
-- **27+ Sensor Entities**: Complete monitoring of all solar charger parameters
-- **Energy Dashboard**: Integration with Home Assistant's energy tracking
-- **Real-time Updates**: Live data every 30 seconds
-- **Professional UI**: Proper device classes, icons, and units
-- **Easy Setup**: Configuration flow with automatic device discovery
-
-### Installation
+Run the installation script:
 ```bash
-# Copy integration to Home Assistant
-cp -r homeassistant/custom_components/tracer_solar_charger /config/custom_components/
-
-# Or use the automated installer
-cd homeassistant && ./install.sh
+./install_homeassistant.sh /path/to/homeassistant/config
 ```
 
-### Configuration
-1. Restart Home Assistant
+Or manually copy files:
+```bash
+# Copy integration to Home Assistant
+cp -r homeassistant_integration /config/custom_components/tracer_solar_charger
+cp -r tracer_solar_charger /config/custom_components/tracer_solar_charger/
+```
+
+## Usage
+
+### CLI Commands
+
+#### Device Discovery
+```bash
+./solar-charger --device /dev/ttyUSB0 discover
+```
+
+#### List Available Parameters
+```bash
+./solar-charger list-parameters
+./solar-charger list-parameters --category pv --detailed
+```
+
+#### Read Parameters
+```bash
+# Read specific parameters
+./solar-charger --device /dev/ttyUSB0 read battery_voltage pv_voltage
+
+# Read all parameters
+./solar-charger --device /dev/ttyUSB0 read-all
+
+# Read by category
+./solar-charger --device /dev/ttyUSB0 read-all --category battery
+```
+
+#### Output Formats
+```bash
+# JSON output
+./solar-charger --device /dev/ttyUSB0 --format json read-all
+
+# CSV output
+./solar-charger --device /dev/ttyUSB0 --format csv read-all --output data.csv
+```
+
+### Home Assistant Setup
+
+1. Restart Home Assistant after installation
 2. Go to Settings → Devices & Services
 3. Click "Add Integration"
 4. Search for "Tracer Solar Charger"
 5. Configure your device path and settings
 
-### Available Sensors
-- **PV Monitoring**: Solar voltage, current, and power
-- **Battery Status**: Voltage, current, SOC, temperature, and status
-- **Load Monitoring**: Voltage, current, and power consumption
-- **Energy Statistics**: Daily and total energy generation/consumption
-- **System Status**: Device temperature, charging status, and alerts
-- **Configuration**: Battery type, capacity, and voltage settings
+## Key Improvements
 
-See `homeassistant/README.md` for complete installation and configuration guide.
+### Code Sharing
+- **Single Modbus Client**: Both CLI and HA use the same `ModbusRTUClient`
+- **Shared Parameters**: Single source of truth in `parameter_definitions.py`
+- **Common Data Models**: Unified `DeviceData` class for formatting
+
+### Simplified Structure
+- **Flat Layout**: No deeply nested folders
+- **Clear Separation**: Core library, CLI, and HA integration are distinct
+- **Easy Maintenance**: Changes to core functionality automatically benefit both interfaces
+
+### Reduced Duplication
+- **Eliminated**: Duplicate modbus clients, parameter definitions, and data handling
+- **Unified**: Single codebase for device communication
+- **Consistent**: Same scaling, formatting, and error handling everywhere
+
+## Migration from Old Structure
+
+The old structure had:
+- `src/` folder with nested modules
+- Duplicate modbus clients in CLI and HA
+- Separate parameter definitions
+- Complex folder hierarchy
+
+The new structure provides:
+- Shared `tracer_solar_charger/` library
+- Single modbus client implementation
+- Unified parameter definitions
+- Flat, maintainable structure
+
+## Hardware Requirements
+
+- Tracer3210AN Solar Charge Controller
+- USB-to-RS485 converter (or direct serial connection)
+- RJ45 cable connected according to the pinout specification
 
 ## Connection Settings
 
@@ -306,124 +292,16 @@ See `homeassistant/README.md` for complete installation and configuration guide.
 - **Stop Bits**: 1
 - **Slave ID**: 1 (default)
 
-## Command Line Options
+## Development
 
-```
---device, -d DEVICE     Serial device path (required for most commands)
---speed, -s SPEED       Serial speed (default: 115200)
---slave-id SLAVE_ID     Modbus slave ID (default: 1)
---timeout TIMEOUT       Communication timeout (default: 2.0s)
---format, -f FORMAT     Output format: human, json, csv (default: human)
---output, -o OUTPUT     Output file (default: stdout)
-```
+### Adding New Parameters
 
-## Examples
+1. Add parameter definition to `tracer_solar_charger/parameter_definitions.py`
+2. Parameters automatically available in both CLI and Home Assistant
 
-### Monitor Battery Status
-```bash
-./solar-charger --device /dev/ttyUSB0 monitor --category battery --interval 10
-```
+### Extending Functionality
 
-### Export Daily Statistics
-```bash
-./solar-charger --device /dev/ttyUSB0 --format json read-all --category statistics --output daily_stats.json
-```
+1. Add methods to `ModbusRTUClient` for new communication features
+2. Extend `DeviceData` for new formatting options
+3. Both CLI and HA integration benefit automatically
 
-### Check System Health
-```bash
-./solar-charger --device /dev/ttyUSB0 read battery_voltage battery_status charging_equipment_status fault_status
-```
-
-### Log Data Continuously
-```bash
-./solar-charger --device /dev/ttyUSB0 --format csv monitor --interval 60 --output solar_log.csv
-```
-
-### Configure Battery Settings
-```bash
-# Set battery type and capacity
-./solar-charger --device /dev/ttyUSB0 write battery_type LiFePO4
-./solar-charger --device /dev/ttyUSB0 write battery_capacity 200
-
-# Adjust voltage thresholds
-./solar-charger --device /dev/ttyUSB0 write float_voltage 13.8
-./solar-charger --device /dev/ttyUSB0 write low_voltage_disconnect 11.1
-```
-
-### Backup and Restore Configuration
-```bash
-# Create backup before making changes
-./solar-charger --device /dev/ttyUSB0 backup-config --output my_config_backup.json
-
-# Test changes with dry-run first
-./solar-charger --device /dev/ttyUSB0 write float_voltage 13.6 --dry-run
-
-# Apply the change
-./solar-charger --device /dev/ttyUSB0 write float_voltage 13.6
-```
-
-## Device Information
-
-**Current Device Status** (as of last scan):
-- Battery: 13.10V (LiFePO4, 200Ah capacity)
-- Load: 1.20A draw (~15W)
-- PV: 0.01V (nighttime/no sun)
-- Total Generation: 256.88 kWh lifetime
-- Operating Days: 21,989 (counter may have overflowed)
-- Battery Cycles: 47 full charges
-
-## Troubleshooting
-
-### Power Sensor Values
-
-If power sensors show values that are 100x too large (e.g., 1500W instead of 15W), this indicates a scaling issue. Both the CLI and Home Assistant integration have been updated with the correct scaling (0.01 instead of 1). See `POWER_SCALING_FIX_COMPLETE.md` for details.
-
-### Decimal Formatting
-
-The CLI now formats all floating-point values to 2 decimal places for clean, professional output. If you see excessive decimal places, ensure you have the latest version. See `DECIMAL_FORMATTING_FIX.md` for details.
-
-### Connection Issues
-1. Verify device path: `ls /dev/tty*` or `ls /dev/ttyUSB*`
-2. Check permissions: `sudo chmod 666 /dev/ttyUSB0`
-3. Test with discovery: `./solar-charger --device /dev/ttyUSB0 discover`
-
-### Communication Errors
-- **"Illegal Data Address"**: Some registers may not be available on all firmware versions
-- **Timeout errors**: Try increasing `--timeout` value
-- **No response**: Check baud rate and slave ID settings
-
-### Parameter Issues
-- Use `list-parameters` to see all available parameters
-- Some parameters may return 0 or invalid values depending on device state
-- Multi-word values (power, energy) use separate high/low registers
-
-## Technical Details
-
-- **Total Registers Mapped**: 131 (57 input + 74 holding registers)
-- **Function Codes**: FC04 (Input Registers), FC03 (Holding Registers)
-- **Multi-register Support**: Up to 16 registers per read (FC04), 8 registers per read (FC03)
-- **Efficient Reading**: Optimized register blocks for fast data collection
-- **Error Handling**: Comprehensive Modbus error detection and reporting
-
-## Files Structure
-
-```
-TracerSolarCharger/
-├── solar-charger              # Main CLI executable
-├── src/
-│   ├── main.py               # CLI application
-│   ├── communication/
-│   │   └── modbus_client.py  # Modbus RTU client
-│   └── models/
-│       └── device_data.py    # Data models and formatting
-├── parameter_definitions.py   # Complete parameter mapping
-├── register_map.json        # Discovered register data
-├── register_map.md          # Human-readable register documentation
-├── requirements.txt         # Python dependencies
-└── README.md               # This file
-```
-
-
-## Contributing
-
-Feel free to submit issues, improvements, or additional device support.
