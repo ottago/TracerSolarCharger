@@ -1,10 +1,10 @@
 {
   "domain": "tracer_solar_charger",
   "name": "Tracer Solar Charger",
-  "codeowners": ["@nick"],
+  "codeowners": ["@ottago"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/nick/TracerSolarCharger",
+  "documentation": "https://github.com/ottago/TracerSolarCharger",
   "integration_type": "device",
   "iot_class": "local_polling",
   "requirements": ["pyserial==3.5"],

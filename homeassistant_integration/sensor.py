@@ -76,48 +76,55 @@ class TracerDataUpdateCoordinator(DataUpdateCoordinator):
     def _fetch_data(self) -> Dict[str, Any]:
         """Fetch data from device."""
         data = {}
+        _LOGGER.debug(f"Attempting to fetch data from {self.port}")
         
-        with ModbusRTUClient(self.port, self.baudrate, self.slave_id, timeout=3.0) as client:
-            if not client.connect():
-                raise UpdateFailed("Failed to connect to device")
+        try:
+            with ModbusRTUClient(self.port, self.baudrate, self.slave_id, timeout=1.0) as client:
+                if not client.connect():
+                    _LOGGER.error(f"Failed to connect to device at {self.port}")
+                    raise UpdateFailed("Failed to connect to device")
                 
-            for param_name in SENSOR_PARAMETERS:
-                if param_name not in PARAMETERS:
-                    continue
-                    
-                param = PARAMETERS[param_name]
-                address = param['address']
+                _LOGGER.debug(f"Connected successfully to {self.port}")
                 
-                try:
-                    # Handle combined registers (like power values)
-                    if param.get('combine_registers'):
-                        # Read both low and high registers
-                        if param.get('function_code') == 4:
-                            low_result = client.read_input_registers(address, 1)
-                            high_result = client.read_input_registers(address + 1, 1)
-                        else:
-                            low_result = client.read_holding_registers(address, 1)
-                            high_result = client.read_holding_registers(address + 1, 1)
-                            
-                        if low_result and high_result:
-                            combined_value = (high_result[0] << 16) | low_result[0]
-                            scaled_value = combined_value * param.get('scale', 1)
-                            data[param_name] = scaled_value
-                    else:
-                        # Single register read
-                        if param.get('function_code') == 4:
-                            result = client.read_input_registers(address, 1)
-                        else:
-                            result = client.read_holding_registers(address, 1)
-                            
-                        if result:
-                            raw_value = result[0]
-                            scaled_value = raw_value * param.get('scale', 1)
-                            data[param_name] = scaled_value
-                            
-                except Exception as e:
-                    _LOGGER.warning(f"Failed to read {param_name}: {e}")
+                for param_name in SENSOR_PARAMETERS:
+                    if param_name not in PARAMETERS:
+                        _LOGGER.warning(f"Parameter {param_name} not found in PARAMETERS")
+                        continue
+                        
+                    param = PARAMETERS[param_name]
+                    address = param['address']
                     
+                    try:
+                        if param.get('combine_registers'):
+                            # Combined register (32-bit value)
+                            result = client.read_combined_registers(address, param['high_address'])
+                            if result is not None:
+                                scaled_value = result * param.get('scale', 1)
+                                data[param_name] = scaled_value
+                                _LOGGER.debug(f"Read {param_name}: {result} -> {scaled_value}")
+                        else:
+                            # Single register
+                            if param.get('function_code') == 4:
+                                result = client.read_input_registers(address, 1)
+                            else:
+                                result = client.read_holding_registers(address, 1)
+                                
+                            if result:
+                                raw_value = result[0]
+                                scaled_value = raw_value * param.get('scale', 1)
+                                data[param_name] = scaled_value
+                                _LOGGER.debug(f"Read {param_name}: {raw_value} -> {scaled_value}")
+                            else:
+                                _LOGGER.warning(f"No data for {param_name}")
+                            
+                    except Exception as e:
+                        _LOGGER.error(f"Failed to read {param_name}: {e}")
+                        
+        except Exception as e:
+            _LOGGER.error(f"Connection error: {e}")
+            raise UpdateFailed(f"Connection error: {e}")
+                    
+        _LOGGER.info(f"Successfully read {len(data)} parameters")
         return data
 
 class TracerSensorEntity(CoordinatorEntity, SensorEntity):
@@ -147,7 +154,7 @@ class TracerSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = self.param_info.get('unit')
         
         # Set state class for numeric sensors
-        if self._attr_device_class in ['voltage', 'current', 'power', 'energy', 'temperature']:
+        if hasattr(self, '_attr_device_class') and self._attr_device_class in ['voltage', 'current', 'power', 'energy', 'temperature']:
             self._attr_state_class = "measurement"
 
     @property
@@ -169,4 +176,16 @@ class TracerSensorEntity(CoordinatorEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.param_name in self.coordinator.data
+        return (
+            self.coordinator.last_update_success 
+            and self.param_name in self.coordinator.data 
+            and self.coordinator.data[self.param_name] is not None
+        )
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Return additional state attributes."""
+        return {
+            "address": f"0x{self.param_info['address']:04X}",
+            "category": self.param_info.get('category', 'unknown'),
+        }

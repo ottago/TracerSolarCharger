@@ -48,23 +48,36 @@ def read_parameters(device_path: str, param_names: List[str], slave_id: int = 1,
             address = param['address']
             
             # Read the register
-            if param.get('function_code') == 4:
-                result = client.read_input_registers(address, 1)
+            if param.get('combine_registers'):
+                # Combined register (32-bit value from two 16-bit registers)
+                result = client.read_combined_registers(address, param['high_address'])
+                if result is not None:
+                    scaled_value = result * param.get('scale', 1)
+                    device_data.set_parameter(
+                        param_name,
+                        scaled_value,
+                        param.get('unit', ''),
+                        param.get('category', '')
+                    )
             else:
-                result = client.read_holding_registers(address, 1)
-                
-            if result:
-                raw_value = result[0]
-                scaled_value = raw_value * param.get('scale', 1)
-                
-                device_data.set_parameter(
-                    param_name,
-                    scaled_value,
-                    param.get('unit', ''),
-                    param.get('category', '')
-                )
-            else:
-                print(f"Failed to read {param_name}")
+                # Single register
+                if param.get('function_code') == 4:
+                    result = client.read_input_registers(address, 1)
+                else:
+                    result = client.read_holding_registers(address, 1)
+                    
+                if result:
+                    raw_value = result[0]
+                    scaled_value = raw_value * param.get('scale', 1)
+                    
+                    device_data.set_parameter(
+                        param_name,
+                        scaled_value,
+                        param.get('unit', ''),
+                        param.get('category', '')
+                    )
+                else:
+                    print(f"Failed to read {param_name}")
                 
     return device_data
 

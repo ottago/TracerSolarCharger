@@ -14,21 +14,19 @@ DEFAULT_TIMEOUT = 3  # seconds
 MANUFACTURER = "EPEVER"
 MODEL = "Tracer3210AN"
 
-# Key parameters to expose as sensors (subset of all available parameters)
+# Key parameters to expose as sensors (only existing parameters)
 SENSOR_PARAMETERS = [
     "pv_voltage",
-    "pv_current", 
-    "pv_power_combined",
+    "pv_current",
+    "pv_power",
     "battery_voltage",
     "battery_current",
     "battery_soc",
     "battery_temp",
     "load_voltage",
     "load_current",
-    "load_power_combined",
+    "load_power",
     "device_temp",
-    "generated_energy_today_combined",
-    "consumed_energy_today_combined",
     "battery_status",
     "charging_equipment_status",
     "fault_status"
@@ -38,7 +36,7 @@ SENSOR_PARAMETERS = [
 DEVICE_CLASSES = {
     "voltage": ["pv_voltage", "battery_voltage", "load_voltage"],
     "current": ["pv_current", "battery_current", "load_current"],
-    "power": ["pv_power_combined", "load_power_combined"],
+    "power": ["pv_power", "load_power"],
     "energy": ["generated_energy_today_combined", "consumed_energy_today_combined"],
     "temperature": ["battery_temp", "device_temp"],
     "battery": ["battery_soc"]
