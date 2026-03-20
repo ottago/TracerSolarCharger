@@ -1,7 +1,9 @@
 """Tracer Solar Charger integration for Home Assistant."""
 
+import asyncio
 import logging
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
 
@@ -10,6 +12,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
+
+
+def get_port_lock(hass: HomeAssistant, port: str) -> asyncio.Lock:
+    """Get or create a shared lock for a serial port."""
+    locks = hass.data[DOMAIN].setdefault("_port_locks", {})
+    if port not in locks:
+        locks[port] = asyncio.Lock()
+    return locks[port]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

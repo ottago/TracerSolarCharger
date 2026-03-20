@@ -1,5 +1,6 @@
 """Sensor platform for Tracer Solar Charger."""
 
+import asyncio
 import logging
 from datetime import timedelta
 from typing import Any, Dict, Optional
@@ -31,6 +32,8 @@ from .const import (
     ICONS,
 )
 
+from . import get_port_lock
+
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
@@ -59,6 +62,7 @@ class TracerDataUpdateCoordinator(DataUpdateCoordinator):
         self.port = config_entry.data[CONF_PORT]
         self.slave_id = config_entry.data.get(CONF_SLAVE_ID, 1)
         self.baudrate = config_entry.data.get(CONF_BAUDRATE, 115200)
+        self._port_lock = get_port_lock(hass, self.port)
         scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
         super().__init__(
@@ -69,11 +73,12 @@ class TracerDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self) -> Dict[str, Any]:
-        """Update data via library."""
-        try:
-            return await self.hass.async_add_executor_job(self._fetch_data)
-        except Exception as exception:
-            raise UpdateFailed(f"Error communicating with device: {exception}")
+        """Update data via library, holding the port lock."""
+        async with self._port_lock:
+            try:
+                return await self.hass.async_add_executor_job(self._fetch_data)
+            except Exception as exception:
+                raise UpdateFailed(f"Error communicating with device: {exception}")
 
     def _fetch_data(self) -> Dict[str, Any]:
         """Fetch data from device."""
