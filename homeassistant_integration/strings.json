@@ -9,11 +9,34 @@
           "slave_id": "Modbus Slave ID",
           "baudrate": "Baud Rate"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Tracer Solar Charger",
+        "description": "Update the connection settings for your charge controller",
+        "data": {
+          "port": "Serial Port",
+          "slave_id": "Modbus Slave ID",
+          "baudrate": "Baud Rate"
+        }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to device. Check port and wiring.",
       "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "reconfigure_successful": "Configuration updated successfully"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tracer Solar Charger Options",
+        "description": "Adjust polling settings",
+        "data": {
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
     }
   }
 }

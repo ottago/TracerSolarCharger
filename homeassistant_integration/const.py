@@ -5,6 +5,7 @@ DOMAIN = "tracer_solar_charger"
 # Configuration keys
 CONF_SLAVE_ID = "slave_id"
 CONF_BAUDRATE = "baudrate"
+CONF_SCAN_INTERVAL = "scan_interval"
 
 # Default values
 DEFAULT_SCAN_INTERVAL = 30  # seconds

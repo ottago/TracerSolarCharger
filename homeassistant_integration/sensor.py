@@ -22,6 +22,7 @@ from .const import (
     DOMAIN,
     CONF_SLAVE_ID,
     CONF_BAUDRATE,
+    CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     MANUFACTURER,
     MODEL,
@@ -58,12 +59,13 @@ class TracerDataUpdateCoordinator(DataUpdateCoordinator):
         self.port = config_entry.data[CONF_PORT]
         self.slave_id = config_entry.data.get(CONF_SLAVE_ID, 1)
         self.baudrate = config_entry.data.get(CONF_BAUDRATE, 115200)
-        
+        scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(seconds=scan_interval),
         )
 
     async def _async_update_data(self) -> Dict[str, Any]:
@@ -79,7 +81,7 @@ class TracerDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"Attempting to fetch data from {self.port}")
         
         try:
-            with ModbusRTUClient(self.port, self.baudrate, self.slave_id, timeout=1.0) as client:
+            with ModbusRTUClient(self.port, self.baudrate, self.slave_id, timeout=3.0) as client:
                 if not client.connect():
                     _LOGGER.error(f"Failed to connect to device at {self.port}")
                     raise UpdateFailed("Failed to connect to device")
