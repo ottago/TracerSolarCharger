@@ -1,0 +1,6 @@
+# Add this to your Home Assistant configuration.yaml to enable debug logging
+
+logger:
+  default: info
+  logs:
+    custom_components.tracer_solar_charger: debug
