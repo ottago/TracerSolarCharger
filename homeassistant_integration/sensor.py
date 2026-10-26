@@ -28,6 +28,9 @@ from .const import (
     MANUFACTURER,
     MODEL,
     SENSOR_PARAMETERS,
+    VALID_RANGES,
+    INVALID_RAW_VALUES,
+    CONFIRM_ZERO_PARAMETERS,
     DEVICE_CLASSES,
     ICONS,
 )
@@ -63,6 +66,7 @@ class TracerDataUpdateCoordinator(DataUpdateCoordinator):
         self.slave_id = config_entry.data.get(CONF_SLAVE_ID, 1)
         self.baudrate = config_entry.data.get(CONF_BAUDRATE, 115200)
         self._port_lock = get_port_lock(hass, self.port)
+        self._last_good: Dict[str, float] = {}
         scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
         super().__init__(
@@ -80,57 +84,77 @@ class TracerDataUpdateCoordinator(DataUpdateCoordinator):
             except Exception as exception:
                 raise UpdateFailed(f"Error communicating with device: {exception}")
 
+    def _read_parameter(self, client: ModbusRTUClient, param_name: str) -> Optional[float]:
+        """Read one parameter; None when the read failed or the value is not plausible."""
+        param = PARAMETERS[param_name]
+        address = param['address']
+
+        if param.get('combine_registers'):
+            raw_value = client.read_combined_registers(address, param['high_address'])
+        else:
+            if param.get('function_code') == 4:
+                result = client.read_input_registers(address, 1)
+            else:
+                result = client.read_holding_registers(address, 1)
+            raw_value = result[0] if result else None
+
+        if raw_value is None:
+            return None
+        if raw_value in INVALID_RAW_VALUES:
+            _LOGGER.debug(f"Discarding {param_name}: raw value {raw_value:#x} means no data")
+            return None
+
+        scaled_value = raw_value * param.get('scale', 1)
+        valid_range = VALID_RANGES.get(param_name)
+        if valid_range and not valid_range[0] <= scaled_value <= valid_range[1]:
+            _LOGGER.debug(f"Discarding {param_name}: {scaled_value} outside {valid_range}")
+            return None
+
+        return scaled_value
+
     def _fetch_data(self) -> Dict[str, Any]:
         """Fetch data from device."""
         data = {}
         _LOGGER.debug(f"Attempting to fetch data from {self.port}")
-        
+
         try:
             with ModbusRTUClient(self.port, self.baudrate, self.slave_id, timeout=3.0) as client:
                 if not client.connect():
                     _LOGGER.error(f"Failed to connect to device at {self.port}")
                     raise UpdateFailed("Failed to connect to device")
-                
+
                 _LOGGER.debug(f"Connected successfully to {self.port}")
-                
+
                 for param_name in SENSOR_PARAMETERS:
                     if param_name not in PARAMETERS:
                         _LOGGER.warning(f"Parameter {param_name} not found in PARAMETERS")
                         continue
-                        
-                    param = PARAMETERS[param_name]
-                    address = param['address']
-                    
+
                     try:
-                        if param.get('combine_registers'):
-                            # Combined register (32-bit value)
-                            result = client.read_combined_registers(address, param['high_address'])
-                            if result is not None:
-                                scaled_value = result * param.get('scale', 1)
-                                data[param_name] = scaled_value
-                                _LOGGER.debug(f"Read {param_name}: {result} -> {scaled_value}")
-                        else:
-                            # Single register
-                            if param.get('function_code') == 4:
-                                result = client.read_input_registers(address, 1)
-                            else:
-                                result = client.read_holding_registers(address, 1)
-                                
-                            if result:
-                                raw_value = result[0]
-                                scaled_value = raw_value * param.get('scale', 1)
-                                data[param_name] = scaled_value
-                                _LOGGER.debug(f"Read {param_name}: {raw_value} -> {scaled_value}")
-                            else:
-                                _LOGGER.warning(f"No data for {param_name}")
-                            
+                        value = self._read_parameter(client, param_name)
+
+                        # Confirm a sudden drop to exactly zero before trusting it
+                        if (value == 0
+                                and param_name in CONFIRM_ZERO_PARAMETERS
+                                and self._last_good.get(param_name, 0) > 0):
+                            value = self._read_parameter(client, param_name)
+                            _LOGGER.debug(f"Re-read {param_name} after zero: {value}")
+
+                        if value is None:
+                            _LOGGER.debug(f"No valid data for {param_name}")
+                            continue
+
+                        data[param_name] = value
+                        self._last_good[param_name] = value
+                        _LOGGER.debug(f"Read {param_name}: {value}")
+
                     except Exception as e:
                         _LOGGER.error(f"Failed to read {param_name}: {e}")
-                        
+
         except Exception as e:
             _LOGGER.error(f"Connection error: {e}")
             raise UpdateFailed(f"Connection error: {e}")
-                    
+
         _LOGGER.info(f"Successfully read {len(data)} parameters")
         return data
 
