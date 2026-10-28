@@ -15,8 +15,12 @@ PLATFORMS = [Platform.SENSOR]
 
 
 def get_port_lock(hass: HomeAssistant, port: str) -> asyncio.Lock:
-    """Get or create a shared lock for a serial port."""
-    locks = hass.data[DOMAIN].setdefault("_port_locks", {})
+    """Get or create the lock for a serial port.
+
+    Stored under a domain-independent key so every integration on the same RS485
+    bus (Solplanet, Tracer, ...) serializes its polls on one lock.
+    """
+    locks = hass.data.setdefault("rs485_port_locks", {})
     if port not in locks:
         locks[port] = asyncio.Lock()
     return locks[port]
